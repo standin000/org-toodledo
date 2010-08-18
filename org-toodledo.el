@@ -284,7 +284,7 @@ Return a list of task alists."
       (let* (info
              (status (match-string-no-properties 2))
              (priority (match-string-no-properties 3))
-             (title (decode-coding-string (match-string-no-properties 4) 'utf-8))
+             (title (decode-coding-string (match-string-no-properties 4) w3m-default-coding-system))
              (tags (match-string-no-properties 5))
              (id (org-entry-get (point) "Toodledo-ID"))
              (contexts (org-toodledo-get-contexts))
@@ -552,7 +552,7 @@ been added/edited and (\"deleted\" . \"timestamp\") if tasks have been deleted."
       ((equal priority "1") "") 
       ((equal priority "2") "[#B] ") 
       ((equal priority "3") "[#A] "))
-     (decode-coding-string (org-toodledo-task-title task) 'utf-8)
+     (decode-coding-string (org-toodledo-task-title task) w3m-default-coding-system)
      (if (org-toodledo-task-context task)
          (concat " :@" (org-toodledo-task-context task) ":") 
        "")
@@ -577,7 +577,7 @@ been added/edited and (\"deleted\" . \"timestamp\") if tasks have been deleted."
        "")
 ;     (or (org-toodledo-task-note task) "") "\n"
      (or (if (org-toodledo-task-note task)
-             (decode-coding-string (org-toodledo-task-note task) 'utf-8)
+             (decode-coding-string (org-toodledo-task-note task) w3m-default-coding-system)
              "")) "\n"
      ":PROPERTIES:\n"
      ":Toodledo-ID: " (org-toodledo-task-id task) "\n"
@@ -727,7 +727,5 @@ Reload if FORCE is non-nil."
                               (org-end-of-subtree))))
       (insert (org-toodledo-task-to-string task level))
       t)))
-
-(setq w3m-coding-system 'utf-8)
 
 (provide 'org-toodledo)
