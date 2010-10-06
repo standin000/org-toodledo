@@ -51,6 +51,7 @@
 ;; Note: Mapped to todo text. May get confused by asterisks, so don't use any starting asterisks in your body text.
 ;;   (or anything that looks like an Org headline).
 ;; Completed: Mapped to DONE todo state.
+;; Completedon: Mapped to "CLOSED"
 ;;
 ;; TODO:
 ;; - [ ] Double-check new/changed/deleted task updating, still seems buggy
@@ -108,6 +109,11 @@
   :group 'org-toodledo
   :type 'string)
 
+(defcustom org-toodledo-archive-location ""
+  "Archive location for DONE item."
+  :group 'org-toodledo
+  :type 'string)
+
 (defvar org-toodledo-token-expiry nil "Expiry time for authentication token.")
 (defvar org-toodledo-token nil "Authentication token.")
 (defvar org-toodledo-key nil "Authentication key.")
@@ -127,8 +133,10 @@
             ":Last-modified: " (or (cdr (assoc "lastaddedit" account-info)) "0") "\n"
             ":Last-deleted: " (or (cdr (assoc "lastdelete" account-info)) "0") "\n"
             ":Last-sync: " (cdr (assoc "unixtime" server-info)) "\n"
+            ":ARCHIVE: ::" org-toodledo-archive-location "\n"
             ":END:\n")
-    (insert (mapconcat 'org-toodledo-task-to-string tasks "\n"))))
+    (insert (mapconcat 'org-toodledo-task-to-string tasks "\n"))
+    (insert "\n" org-toodledo-archive-location)))
 
 (defun org-toodledo-get-token ()
   "Retrieve authentication token valid for four hours."
@@ -268,6 +276,11 @@ Return a list of task alists."
                  (concat "\\<"
                          (regexp-quote org-scheduled-string) " +<[^>\n]+>[ \t]*") nil t)
             (replace-match ""))
+          ;; Plato Wu,2010/10/05: remove CLOSED: [.*] string from note.
+          (when (re-search-forward
+                 (concat "\\<"
+                         (regexp-quote org-closed-string) " +\\[[^>\n]+\\][ \t]*") nil t)
+            (replace-match ""))
           (goto-char (point-min))
           (while (re-search-forward "\n\n+" nil t)
             (replace-match "\n"))
@@ -351,6 +364,11 @@ Return a list of task alists."
           (setq info (cons (cons "startdate"
                                  (substring (org-entry-get nil "SCHEDULED")
                                             0 10)) info)))
+        (when (org-entry-get nil "CLOSED")
+          (setq info (cons (cons "completedon"
+                                 (substring (org-entry-get nil "CLOSED")
+                                            0 10)) info)))
+        
         info))))
 
 (defun org-toodledo-sync ()
@@ -572,6 +590,15 @@ been added/edited and (\"deleted\" . \"timestamp\") if tasks have been deleted."
          (concat org-scheduled-string " "
                  (org-toodledo-format-date
                   (org-toodledo-task-startdate task)
+                  repeat-string)
+                 "\n")
+       "")
+     (if (and (org-toodledo-task-completed task)
+              (not (equal (org-toodledo-task-completed task) ""))
+              (not (< (string-to-number (org-toodledo-task-completed task)) 0)))
+         (concat org-closed-string " "
+                 (org-toodledo-format-date
+                  (org-toodledo-task-completed task)
                   repeat-string)
                  "\n")
        "")
