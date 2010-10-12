@@ -281,6 +281,10 @@ Return a list of task alists."
                  (concat "\\<"
                          (regexp-quote org-closed-string) " +\\[[^>\n]+\\][ \t]*") nil t)
             (replace-match ""))
+          (when (re-search-forward
+                 (concat "\\<"
+                         (regexp-quote org-closed-string) " +<[^>\n]+>[ \t]*") nil t)
+            (replace-match ""))
           (goto-char (point-min))
           (while (re-search-forward "\n\n+" nil t)
             (replace-match "\n"))
