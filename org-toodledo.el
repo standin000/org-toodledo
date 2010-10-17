@@ -389,6 +389,9 @@ Return a list of task alists."
 (defun org-toodledo-update ()
   "Insert new tasks and update previous tasks."
   (interactive)
+  (org-content)
+  (beginning-of-buffer)
+  (outline-next-heading)
   (let* ((server-info (org-toodledo-get-server-info))
          (account-info (org-toodledo-get-account-info))
          (changed (org-toodledo-account-changed account-info))
